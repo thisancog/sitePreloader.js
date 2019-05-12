@@ -14,7 +14,7 @@ class sitePreloader {
 		this.wrapper = this.body;
 
 		this.pages = {};
-		this.active = this.hashCode(this.entry);
+		this.active = this.createPageId(this.entry);
 
 		this.parseOptions(options);
 		this.registerEvents();
@@ -28,6 +28,7 @@ class sitePreloader {
 	parseOptions(options = {}) {
 		let defaults = {
 			home:                 window.location.origin,
+											// URL of the website's homepage (only links pointing to here or its subdirectories will be considered)
 			wrapper:              'body',	// CSS selector for the area to be preloaded and switched
 			linkSelector:         'a',		// CSS selector for links to be included. Will only preload same-origin links anyway
 			chacheImmediately:    true,		// whether to cache pages once they're found
@@ -41,12 +42,12 @@ class sitePreloader {
 			smoothScroll:         true,		// whether to scroll smoothly after page switch
 
 		//	Hooks for events
-			onAfterPagePreload:    null,	// function or array of functions to be fired after a page was preloaded
-			onBeforeSwitch:        null,	// function or array of functions to be fired before content will be switched
-			onAfterSwitch:         null,	// function or array of functions to be fired after content has been switched
+			onAfterPagePreload:   [],		// function or array of functions to be fired after a page was preloaded
+			onBeforeSwitch:       [],		// function or array of functions to be fired before content will be switched
+			onAfterSwitch:        [],		// function or array of functions to be fired after content has been switched
 
-		//	Hooks for filter
-			beforePageStorage:     null,	// function or array of functions to filter the fetched document before it is stored
+		//	Hooks for filters
+			beforePageStorage:    [],		// function or array of functions to filter the fetched document before it is stored
 		};
 
 		options = Object.assign(defaults, options);
@@ -109,7 +110,7 @@ class sitePreloader {
 
 			const destination = link.href;
 			
-			let	id = this.hashCode(destination),
+			let	id = this.createPageId(destination),
 				linkObject = {
 					element: link,
 					eventsRegistered: false,
@@ -133,10 +134,11 @@ class sitePreloader {
 	***************************************/
 
 	createNewPageObject(url, links = []) {
-		const id = this.hashCode(url),
+		const id = this.createPageId(url),
 			page = {
 				bodyClasses:	'',
 				content:		'',
+				id:				id,
 				links:			this.castAsArray(links),
 				loaded:			false,
 				rootAttributes:	[],
@@ -240,7 +242,7 @@ class sitePreloader {
 	***************************************/
 
 	switchTo(id) {
-		if (id === this.active) return;
+		if (id === this.active || !this.has(this.pages, id)) return false;
 
 		const newPage = this.pages[id];
 		const scrollBehavior = this.smoothScroll ? 'smooth' : 'auto';
@@ -294,7 +296,7 @@ class sitePreloader {
 	***************************************/
 
 //	removes trailing slashes for consistency
-	hashCode(s) {
+	createPageId(s) {
 		return Math.abs(s.replace(/\/$/, '').split('').reduce(function(a ,b) { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0));
 	}
 
@@ -303,7 +305,7 @@ class sitePreloader {
 			elem = elem.parentElement;
 
 		if (elem.tagName === 'A' && elem.dataset && elem.dataset.scanned)
-			return this.hashCode(elem.href);
+			return this.createPageId(elem.href);
 	}
 
 	// protects from null objects and overridden .hasOwnProperty method
