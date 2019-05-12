@@ -2,7 +2,7 @@
 A small JavaScript class to preload a website's pages for smooth page transitions.
 
 ### How to get started
-Simply load the file and register sitePreloader as a new class.
+Simply load the file and register sitePreloader.js as a new class.
 
 In your HTML document:
 ```html
