@@ -1,6 +1,6 @@
 /***
 	sitePreloader.js
-	Github: https://github.com/thisancog/sitePreloader
+	Github: https://github.com/thisancog/sitePreloader.js
 	License: MIT
  ***/
 
