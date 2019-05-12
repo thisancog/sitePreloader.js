@@ -107,5 +107,5 @@ After initialisation of the class, several useful methods can be invoked on the 
 I have a few further features in mind which could be helpful. If you'd like to contribute, don't hesitate!
 * Preload assets found within the cached pages, e.g. images, fonts, scripts etc.
 * Establish a proper testing pipeline.
-* Possibly get rid of the Promise in favour for async/await or just synchronous code. Not sure if the difference is neglible.
+* Possibly get rid of the Promise in the ```requestPage()``` method in favour for async/await or just synchronous code. Not sure if the difference is negligible.
 * Refactor code to extend compatibility for older browsers.
