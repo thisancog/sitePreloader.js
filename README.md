@@ -56,17 +56,17 @@ let preloader = new sitePreloader(args);
 
 Several events (not in the specific JS sense) can be subscribed to, by declaring a callback function of an array of such as the appropriate parameter (see above). They will be called in the order of their declaration and receive the following arguments, however sitePreloader.js does not process any return values.
 
-* **onAfterPagePreload**(*page*): will be called just after a new page was added to the internal cache (see below)
-* **onBeforeSwitch**(*page*): will be called just before the switch to a new page is made (see below)
-* **onAfterSwitch**(*page*): will be called just after the switch to a new page was made (see below)
+* **onAfterPagePreload**(*newPage*): will be called just after a new page was added to the internal cache (see below)
+* **onBeforeSwitch**(*newPage*, *oldPage*): will be called just before the switch to a new page is made (see below)
+* **onAfterSwitch**(*newPage*, *oldPage*): will be called just after the switch to a new page was made (see below)
 
 ##### Usage
 
-Callbacks for the ``onAfterPagePreload`` event, the ``onBeforeSwitch`` and ``onAfterSwitch`` will be passed a page object with data of the preloaded page:
+Callbacks for the ``onAfterPagePreload`` event, the ``onBeforeSwitch`` and ``onAfterSwitch`` will be passed one/two page object(s):
 
 ```javascript
-function some_callback(page) {
-/* page = {
+function some_callback(newPage /*, oldPage (if applicable) */) {
+/* newPage = {
         bodyClasses: …,    // string containing the classes of the page's <body> tag
         content: …,        // string containing the inner HTML of the page's wrapper region (see options)
         id: …,             // the internal identifier used for this page (directly tied to its URL),
