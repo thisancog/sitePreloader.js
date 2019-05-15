@@ -261,11 +261,12 @@ class sitePreloader {
 	switchTo(id) {
 		if (id === this.active || !this.has(this.pages, id)) return false;
 
+		const oldPage = this.pages[this.active];
 		const newPage = this.pages[id];
 		const scrollBehavior = this.smoothScroll ? 'smooth' : 'auto';
 
 		if (this.events.onBeforeSwitch.length > 0)
-			this.events.onBeforeSwitch.forEach(cb => cb(newPage));
+			this.events.onBeforeSwitch.forEach(cb => cb(newPage, oldPage));
 
 		if (this.switchPageTitle)
 			document.title = newPage.title;
@@ -282,7 +283,7 @@ class sitePreloader {
 				newPage.rootAttributes.forEach((attr => this.root.setAttribute(attr.name, attr.value)).bind(this));
 
 			if (this.events.onAfterSwitch.length > 0)
-				this.events.onAfterSwitch.forEach(cb => cb(newPage));
+				this.events.onAfterSwitch.forEach(cb => cb(newPage, oldPage));
 
 			window.history.pushState({ id: id, url: newPage.url }, newPage.title, newPage.url);
 			window.scrollTo({ top: 0, behavior: scrollBehavior });
