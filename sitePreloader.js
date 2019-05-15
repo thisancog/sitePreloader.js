@@ -91,7 +91,12 @@ class sitePreloader {
 
 	cacheEntrySite() {
 		if (!this.cacheEntryPage) return;
-		this.createNewPageObject(this.entry);
+
+		let entryWithoutSlash = this.entry.replace(/\/$/, ''),
+			links = document.querySelectorAll('a[href="' + entryWithoutSlash + '"], a[href="' + this.entry + '"]');
+
+		links = [].slice.call(links).map((link => this.createNewLinkObject(link)).bind(this));
+		this.createNewPageObject(this.entry, links);
 	}
 
 
@@ -111,14 +116,7 @@ class sitePreloader {
 			const destination = link.href;
 			
 			let	id = this.createPageId(destination),
-				linkObject = {
-					element: link,
-					eventsRegistered: false,
-					url: destination
-				};
-
-			link.dataset.scanned = true;
-			this.hookUpLink(linkObject, id);
+				linkObject = this.createNewLinkObject(link);
 
 		//	page was already indexed
 			if (this.has(this.pages, id))
@@ -126,6 +124,25 @@ class sitePreloader {
 
 			this.createNewPageObject(destination, linkObject);
 		}).bind(this));
+	}
+
+
+	/***************************************
+		Create a new link object
+	***************************************/
+
+	createNewLinkObject(link) {
+		const destination = link.href;
+		const id = this.createPageId(destination);
+		let linkObject = {
+				element: link,
+				eventsRegistered: false,
+				url: destination
+			};
+
+		link.dataset.scanned = true;
+		this.hookUpLink(linkObject, id);
+		return linkObject;
 	}
 
 
@@ -220,7 +237,7 @@ class sitePreloader {
 		this.root.classList.add('is-hovering-page-link');
 
 		if (this.pages[id].loaded) return;
-
+		
 		this.preloadPage(id);
 	}
 
@@ -274,7 +291,6 @@ class sitePreloader {
 				this.root.classList.remove('is-changing-page')
 				this.scanLinks();
 				this.active = id;
-
 			}).bind(this), 400)
 		}).bind(this), this.delayBeforeSwitch);
 	};
@@ -308,7 +324,7 @@ class sitePreloader {
 			return this.createPageId(elem.href);
 	}
 
-	// protects from null objects and overridden .hasOwnProperty method
+//	protects from null objects and overridden .hasOwnProperty method
 	has(obj, key) {
 		let lookup = Object.prototype.hasOwnProperty;
 		return lookup.call(obj, key);
