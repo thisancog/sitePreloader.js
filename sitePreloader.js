@@ -250,7 +250,7 @@ class sitePreloader {
 		if (!this.pages[id].loaded) return;
 
 		e.preventDefault();
-		this.switchTo(id);
+		this.switchTo(id, e.target);
 	}
 
 
@@ -258,42 +258,41 @@ class sitePreloader {
 		Switch between pages
 	***************************************/
 
-	switchTo(id) {
+	switchTo(id, referrer = null) {
 		if (id === this.active || !this.has(this.pages, id)) return false;
 
 		const oldPage = this.pages[this.active];
 		const newPage = this.pages[id];
 		const scrollBehavior = this.smoothScroll ? 'smooth' : 'auto';
 
-		if (this.events.onBeforeSwitch.length > 0)
-			this.events.onBeforeSwitch.forEach(cb => cb(newPage, oldPage));
+		this.serialPromises(this.events.onBeforeSwitch, newPage, oldPage, referrer).then((function() {
+			if (this.switchPageTitle)
+				document.title = newPage.title;
 
-		if (this.switchPageTitle)
-			document.title = newPage.title;
-
-		this.root.classList.add('is-changing-page');
-
-		setTimeout((function() {
-			this.wrapper.innerHTML = newPage.content;
-
-			if (this.switchWrapperClasses)	this.wrapper.classList = newPage.wrapperClasses;
-			if (this.switchBodyClasses)		this.body.className    = newPage.bodyClasses;
-			if (this.switchRootClasses)		this.root.className    = newPage.rootClasses + ' is-changing-page';
-			if (this.switchRootAttributes)
-				newPage.rootAttributes.forEach((attr => this.root.setAttribute(attr.name, attr.value)).bind(this));
-
-			if (this.events.onAfterSwitch.length > 0)
-				this.events.onAfterSwitch.forEach(cb => cb(newPage, oldPage));
-
-			window.history.pushState({ id: id, url: newPage.url }, newPage.title, newPage.url);
-			window.scrollTo({ top: 0, behavior: scrollBehavior });
+			this.root.classList.add('is-changing-page');
 
 			setTimeout((function() {
-				this.root.classList.remove('is-changing-page')
-				this.scanLinks();
-				this.active = id;
-			}).bind(this), 400)
-		}).bind(this), this.delayBeforeSwitch);
+				this.wrapper.innerHTML = newPage.content;
+
+				if (this.switchWrapperClasses)	this.wrapper.classList = newPage.wrapperClasses;
+				if (this.switchBodyClasses)		this.body.className    = newPage.bodyClasses;
+				if (this.switchRootClasses)		this.root.className    = newPage.rootClasses + ' is-changing-page';
+				if (this.switchRootAttributes)
+					newPage.rootAttributes.forEach((attr => this.root.setAttribute(attr.name, attr.value)).bind(this));
+
+
+				this.serialPromises(this.events.onAfterSwitch, newPage, oldPage, referrer).then((function() {
+					window.history.pushState({ id: id, url: newPage.url }, newPage.title, newPage.url);
+					window.scrollTo({ top: 0, behavior: scrollBehavior });
+
+					setTimeout((function() {
+						this.root.classList.remove('is-changing-page')
+						this.scanLinks();
+						this.active = id;
+					}).bind(this), 400);
+				}).bind(this));
+			}).bind(this), this.delayBeforeSwitch);
+		}).bind(this));
 	};
 
 	switchBack(e) {
@@ -303,7 +302,7 @@ class sitePreloader {
 		if (!this.pages[id])
 			return (window.location.href = e.state.url);
 
-		this.switchTo(id);
+		this.switchTo(id, null);
 	};
 
 
@@ -362,5 +361,15 @@ class sitePreloader {
 			xhr.onerror = function() { reject({ status: xhr.status, statusText: xhr.statusText }); };
 			xhr.send();
 		}).bind(this));
+	}
+
+	serialPromises(functions) {
+		let args = [].slice.call(arguments).slice(1);
+		return functions.reduce((previous, current) => {
+			return previous.then(result => {
+				let currentResult = current(...args);
+				return (currentResult) ? currentResult.then(Array.prototype.concat.bind(result)) : currentResult;
+			});
+		}, Promise.resolve([]));
 	}
 }
