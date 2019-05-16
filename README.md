@@ -56,16 +56,16 @@ let preloader = new sitePreloader(args);
 
 Several events (not in the specific JS sense) can be subscribed to, by declaring a callback function of an array of such as the appropriate parameter (see above). They will be called in the order of their declaration and receive the following arguments, however sitePreloader.js does not process any return values.
 
-* **onAfterPagePreload**(*newPage*): will be called just after a new page was added to the internal cache (see below)
-* **onBeforeSwitch**(*newPage*, *oldPage*): will be called just before the switch to a new page is made (see below)
-* **onAfterSwitch**(*newPage*, *oldPage*): will be called just after the switch to a new page was made (see below)
+* **onAfterPagePreload**(*newPage*): Will be called just after a new page was added to the internal cache (see below). A return value is not needed.
+* **onBeforeSwitch**(*newPage*, *oldPage*, *referrer*): Will be called just before the switch to a new page is made (see below). Needs to return a Promise.
+* **onAfterSwitch**(*newPage*, *oldPage*, *referrer*): Will be called just after the switch to a new page was made (see below). Needs to return a Promise.
 
 ##### Usage
 
 Callbacks for the ``onAfterPagePreload`` event, the ``onBeforeSwitch`` and ``onAfterSwitch`` will be passed one/two page object(s):
 
 ```javascript
-function some_callback(newPage /*, oldPage (if applicable) */) {
+function onAfterPagePreload(newPage) {
 /* newPage = {
         bodyClasses: …,    // string containing the classes of the page's <body> tag
         content: …,        // string containing the inner HTML of the page's wrapper region (see options)
@@ -78,6 +78,15 @@ function some_callback(newPage /*, oldPage (if applicable) */) {
         url: …,            // string containing the page's URL
         wrapperClasses: …, // string containing the classes of the page's wrapper element (see options)
     } */
+}
+```
+
+Furthermore, the functions registered with ``onBeforeSwitch`` and ``onAfterSwitch`` will be passed a third argument ``referrer``, the DOM element on which the click was recorded. This will be ``null`` if the browser's previous page/next page buttons were used or the ``window.history`` was otherwise traversed. Both of these functions must return a Promise.
+
+```javascript
+function onBeforeSwitch(newPage, oldPage, referrer) {
+//  do something...
+    return Promise(resolve, reject => ...);
 }
 ```
 
@@ -107,5 +116,5 @@ After initialisation of the class, several useful methods can be invoked on the 
 I have a few further features in mind which could be helpful. If you'd like to contribute, don't hesitate!
 * Preload assets found within the cached pages, e.g. images, fonts, scripts etc.
 * Establish a proper testing pipeline.
-* Possibly get rid of the Promise in the ```requestPage()``` method in favour for async/await or just synchronous code. Not sure if the difference is negligible.
+* Possibly get rid of Promises in favour for async/await or just synchronous code, but then again:
 * Refactor code to extend compatibility for older browsers.
